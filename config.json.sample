@@ -1,0 +1,20 @@
+{
+	"aha":{
+		"key" : "",
+		"featureProductId":"",
+		"bugProductId":"",
+		"companyProductId":""
+	},
+	"mysql":{
+		"host" : "",
+		"user" : "",
+		"password" : "",
+		"database" : ""
+	},
+	"influx":{
+		"host" : "",
+		"port" : "",
+		"user" : "",
+		"password" :""
+	}
+}
