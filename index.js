@@ -34,6 +34,8 @@ startingServices.push(bugService);
 
 assistant.reportOnMetrics(startingServices);
 
+var subscriptionDataStore = new SubscriptionDataStore();
+subscriptionDataStore.getAllData();
 //subscription.periodicallyRunData();
 return 1;
 
