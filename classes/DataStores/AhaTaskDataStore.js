@@ -1,4 +1,5 @@
 'use strict'
+const schedule = require('node-schedule');
 
 const AhaApi = require('../Interfaces/AhaApi.js');
 const NodeStorage = require('node-storage');
@@ -8,6 +9,13 @@ class AhaTaskDataStore{
 	constructor(){
 		var ahaApi = new AhaApi();
 		var storage = new NodeStorage('./data/TaskStorage.json');
+
+		var scheduledFetch = schedule.scheduleJob('*/15 * * * *', function(){
+
+console.log('running scheduled fetch');
+
+			fetchAllData();
+		});
 
 		this.getAllData = async function(){
 			var data;

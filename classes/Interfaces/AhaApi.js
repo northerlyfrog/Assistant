@@ -1,7 +1,10 @@
 'use strict'
-
-var sleep = require('sleep');
 const config = require('../../config.json');
+const limit = require('simple-rate-limiter');
+const request = limit(require("request")).to(1).per(200);
+
+const ProgressBar = require('progress');
+
 const HttpService = require('./httpService.js');
 const DateTimeService = require('../Services/DateTimeService.js');
 
@@ -20,7 +23,6 @@ class AhaApi{
 
 		this.getAllIdeas = async function(){
 
-			console.log(DateTimeService.now());
 var url = baseUrl +"/products/"+productId+"/ideas";
 			var allRecords = await getAllRecords(url);
 			var individualData = await getInDepthData(baseUrl+"/ideas", allRecords);
@@ -29,7 +31,6 @@ var url = baseUrl +"/products/"+productId+"/ideas";
 
 		this.getAllTasks = async function(){
 
-			console.log(DateTimeService.now());
 			var url = baseUrl + "/tasks";
 			var allRecords = await getAllRecords(url);
 			var individualData = await getInDepthData(url+"/", allRecords);
@@ -37,7 +38,6 @@ var url = baseUrl +"/products/"+productId+"/ideas";
 		}
 
 		this.getAllFeatures = async function(){
-			console.log(DateTimeService.now());
 
 			var releases = await this.getAllReleases();
 
@@ -52,9 +52,6 @@ var url = baseUrl +"/products/"+productId+"/ideas";
 				var allTasks = await getAllRecords(taskUrl);
 				
 				individualData[i].tasks = allTasks.data;
-				
-				console.log(JSON.stringify(releases[individual.release.id], null,2));
-				//individualData[i].release = releases[individual.release.id];
 			}
 			return individualData;
 		}
@@ -101,23 +98,26 @@ var url = baseUrl +"/products/"+productId+"/ideas";
 			var allRecords = listOfShallowItems;
 			var individualData = [];
 
+			var bar = new ProgressBar('Fetching data [:bar] :rate/rps :percent :etas', { 
+				total: allRecords.data.length - 1,
+				width: 40,
+				clear: true
+			});
+
 			for(var i=0; i<allRecords.data.length; i++){
-				//sleep.msleep(intervalBetweenRequestsInMs);
 				var individual = allRecords.data[i];
 				var url = preIdUrl+"/"+individual.id;
 				var response = await HttpService.makeJsonRequest(setCallParameters(url));
 				var result = interpretResponse(response);
 				individualData.push(result.data);
+				bar.tick();
 			}
 
-			console.log("IndividualDataCount: "+individualData.length)
-			console.log(DateTimeService.now());
 			return individualData;
 		}
 
 
 		async function getAllRecords(url, options){
-			console.log(url);
 			var parameters = setCallParameters(url, options);
 			var initialResponse = await HttpService.makeJsonRequest(parameters);
 			var initialResult = interpretResponse(initialResponse);
@@ -133,10 +133,10 @@ var url = baseUrl +"/products/"+productId+"/ideas";
 			return initialResult;
 		}
 
-
 		function interpretResponse(response){
 			var result = {};
 			var response = response;
+
 
 			// Process the initial page of the request
 			for(var key in response){

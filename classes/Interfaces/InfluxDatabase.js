@@ -14,13 +14,6 @@ class InfluxDatabase{
 			database: databaseName
 		});
 
-		const influx2 = new Influx.InfluxDB({
-			host: config.influx2.host,
-			port: config.influx2.port,
-			database: databaseName
-		});
-
-
 		createDatabase(databaseName);
 
 		async function createDatabase(dbName){
@@ -28,17 +21,11 @@ class InfluxDatabase{
 			if(!dbNames.includes(dbName)){
 				var subscriptionDb = await influx.createDatabase(dbName);
 			}
-
-			var db2Names = await influx2.getDatabaseNames();
-			if(!db2Names.includes(dbName)){
-				var db = await influx2.createDatabase(dbName);
-			}
 			return 1;
 		}
 
 		this.writePoints = function(arrayOfPoints){
 			influx.writePoints(arrayOfPoints);
-			influx2.writePoints(arrayOfPoints);
 		}
 
 		this.writeMeasurement = function(measurement, listOfdataObjects){

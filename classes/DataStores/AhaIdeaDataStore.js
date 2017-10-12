@@ -1,4 +1,5 @@
 'use strict'
+const schedule = require('node-schedule');
 
 const AhaApi = require('../Interfaces/AhaApi.js');
 const NodeStorage = require('node-storage');
@@ -9,12 +10,18 @@ class AhaIdeaDataStore{
 		var ahaApi = new AhaApi();
 		var storage = new NodeStorage('./data/IdeaStorage.json');
 
+		var scheduledFetch = schedule.scheduleJob('0 */12 * * *', function(){
+console.log('running scheduled fetch');
+
+			fetchAllData();
+		});
+
 		this.getAllData = async function(){
 			var data;
 
 			if(useCache()){
 			} else {
-				console.log('cache has expired.  Fetching New Data...');
+				console.log('cache has expired.  Fetching New data...');
 				var result = await fetchAllData();
 			}
 

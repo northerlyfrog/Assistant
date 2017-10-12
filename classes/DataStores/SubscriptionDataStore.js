@@ -4,7 +4,6 @@ const MysqlApi = require('../Interfaces/MysqlApi.js');
 const config = require('../../config.json');
 const DateTimeService = require('../Services/DateTimeService.js');
 const InfluxDatabase = require('../Interfaces/InfluxDatabase.js');
-const sleep = require('sleep');
 
 class SubscriptionDataStore{
 	constructor(){
@@ -17,7 +16,7 @@ class SubscriptionDataStore{
 			return result;
 			var currentSubscriptionCount = result.totalSubscriptionCount;
 			var currentUniqueDevicesWithSubscriptions = result.totalSubscribedDeviceCount;
-			
+
 			var point = {
 				measurement: 'subscriptions',
 				fields: {
@@ -25,19 +24,12 @@ class SubscriptionDataStore{
 					uniqueDevices: currentUniqueDevicesWithSubscriptions
 				}
 			}
-			
+
 			var oldPoints = iterateToCreatePastNumbers();
 			oldPoints.push(point);
 
 			influx.writePoints(oldPoints);
 
-		}
-
-		this.periodicallyRunData = function(){
-			console.log("Running Data");
-
-			sleep.sleep(30);
-			this.periodicallyRunData();
 		}
 
 		function iterateToCreatePastNumbers(){

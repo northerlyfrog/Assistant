@@ -35,12 +35,17 @@ describe('Assistant#reportOnMetrics', function(){
 		var services = [serviceOne, serviceTwo];
 
 		td.when(registryCreator.create(services)).thenReturn(services);
-		td.when(registryRunner.run(services)).thenReturn('Updated Registry');
+		td.when(registryRunner.run(services)).thenResolve('Updated Services');
 
 
-		subject.reportOnMetrics(services);
+		var result = subject.reportOnMetrics(services);
 
-		td.verify(registryReporter.report('Updated Registry'));
+		result.then(
+			(result) => {
+				td.verify(registryReporter.report('Updated Services'));
+			}
+		);
+
 	});
 
 	after(function(){
@@ -125,16 +130,20 @@ describe('RegistryRunner#run', function(){
 		td.when(metricOne.run()).thenDo(function(){metricOne.value = 1});
 
 
-		var result = subject.run(listOfServices);
-
-		assert.equal(result.length, 4);
-		assert.notEqual(result[0].value, null);
-		td.verify(subject.saveEachMetric(result));
+		var result = subject.run(listOfServices)
+	
+		result.then(
+			(result) => {
+				assert.equal(result.length, 4);
+				assert.notEqual(result[0].value, null);
+				td.verify(subject.saveEachMetric(result));
+			}
+		);
 
 	});
-	
+
 	after(function(){
-	
+
 	});
 });
 
@@ -160,9 +169,9 @@ describe('RegistryReporter#report', function(){
 
 		td.verify(output(td.matchers.anything()), {times: 2});
 	});
-	
+
 	after(function(){
-	
+
 	});
 });
 

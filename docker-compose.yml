@@ -1,18 +1,23 @@
 version: "2"
 services:
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
-    depends_on:
-      - "influxdb"
-    volumes:
-     - ./data/grafana:/var/lib/grafana
-  influxdb:
-    image: influxdb:1.3
-    ports:
-     - "8083:8083"
-     - "8086:8086"
-    volumes:
-     - ./data/influxdb:/var/lib/influxdb
-   
+ assistant:
+  image: docker-registry.active911.com:5000/bryan.walcott/assistant:latest
+  depends_on:
+   - "influxdb"
+   - "grafana"
+ grafana:
+  image: grafana/grafana:latest
+  ports:
+   - "3000:3000"
+  depends_on:
+   - "influxdb"
+  volumes:
+   - ./data/grafana:/var/lib/grafana
+ influxdb:
+  image: influxdb:1.3
+  ports:
+   - "8083:8083"
+   - "8086:8086"
+  volumes:
+   - ./data/influxdb:/var/lib/influxdb
+

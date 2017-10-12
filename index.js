@@ -1,4 +1,6 @@
 'use strict'
+const schedule = require('node-schedule');
+
 
 const Assistant = require('./classes/Collaborators/Assistant.js');
 const RegistryCreator = require('./classes/Collaborators/RegistryCreator.js');
@@ -18,25 +20,31 @@ var registryReporter = new RegistryReporter();
 
 var assistant = new Assistant(registryCreator, registryRunner, registryReporter);
 
-var startingServices = [];
-
 var ideaService = new IdeaService();
-startingServices.push(ideaService);
-
 var taskService = new TaskService();
-startingServices.push(taskService);
-
 var featureService = new FeatureService();
-startingServices.push(featureService);
-
 var bugService = new BugService();
-startingServices.push(bugService);
+var startingServices = [ideaService, taskService, featureService, bugService];
 
+var rule = new schedule.RecurrenceRule();
+rule.minute = 0;
+rule.hour = [ 4, 12, 20 ];
+rule.dayOfWeek = new schedule.Range(1,5);
+console.log('Starting');
+
+//WorkflowHack To see instant work
 assistant.reportOnMetrics(startingServices);
 
+
+var runScheduledMetricReport = schedule.scheduleJob('0 * * * 1-5', function(){
+	console.log('Running Metrics');
+	assistant.reportOnMetrics(startingServices)
+});
+
 var subscriptionDataStore = new SubscriptionDataStore();
-subscriptionDataStore.getAllData()
-//subscription.periodicallyRunData();
-return 1;
+var runScheduledDataCollection = schedule.scheduleJob(rule, function(){
+	console.log('Running Data Collection');
+	subscriptionDataStore.getAllData()
+});
 
 
