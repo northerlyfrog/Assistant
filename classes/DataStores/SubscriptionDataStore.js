@@ -14,6 +14,7 @@ class SubscriptionDataStore{
 		this.getAllData = async function(){
 			var result = await mysqlApi.getSubscriptionInfo();
 
+			return result;
 			var currentSubscriptionCount = result.totalSubscriptionCount;
 			var currentUniqueDevicesWithSubscriptions = result.totalSubscribedDeviceCount;
 			

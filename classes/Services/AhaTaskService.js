@@ -10,14 +10,23 @@ class AhaTask extends Service{
 		super();
 		var dataStore = new TaskDataStore();
 		var metrics = createMetrics();
-		var maxAgeToBeConsideredRecent = 30;
+		var maxAgeToBeConsideredRecent = 60;
 
 		this.returnMetrics = function(){
 			return metrics;
 		}
 
 		async function getData(){
-			var result = await dataStore.getAllData();
+			var result = [];
+			var initialResult = await dataStore.getAllData();
+			
+			for(var i=0; i<initialResult.length; i++){
+				var individual = initialResult[i];
+
+				if(DateTimeService.timeIsWithinLastXDays(individual.created_at, maxAgeToBeConsideredRecent)){
+					result.push(individual);
+				}
+			}
 			return result;
 		}
 
@@ -50,7 +59,7 @@ class AhaTask extends Service{
 			var averageAgeOfCompleted = calculateAgeOfCompletedItems(list, 'hours');
 			var percentCompleteOnTime = calculateCompletionRateGivenAList(list);
 			var percentDoneWithin4Hours = calculatePercentageOfItemsCompleteWithinATimeframe(list, 4, 'hours');
-		
+
 			return {
 				averageCompletionAgeInHours: averageAgeOfCompleted,
 				percentCompleteByDueDate: percentCompleteOnTime,
@@ -65,7 +74,7 @@ class AhaTask extends Service{
 			var averageAge = calculateAgeOfCompletedItems(list, 'hours');
 			var percentCompleteOnTime = calculateCompletionRateGivenAList(list);
 			var percentDoneWithin20Minutes = calculatePercentageOfItemsCompleteWithinATimeframe(list, 20, 'minutes');
-		
+
 			return {
 				averageCompletionAgeInHours: averageAge,
 				percentCompleteByDueDate: percentCompleteOnTime,
@@ -91,7 +100,7 @@ class AhaTask extends Service{
 			var list = sortListByNameFilter(data, /(P|p)repare|(G|g)ood|(R|r)oll/);
 
 			var averageAge = calculateAgeOfCompletedItems(list, 'days');
-			
+
 			return {
 				averageCompletionAgeInDays: averageAge
 			}
@@ -120,7 +129,7 @@ class AhaTask extends Service{
 						ages.push(age);
 					}
 				}
-			
+
 			}
 
 			var averageAge = calculateAverageGivenAges(ages);

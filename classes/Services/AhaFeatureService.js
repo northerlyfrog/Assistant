@@ -10,7 +10,7 @@ class AhaFeature extends Service{
 		super();
 		var dataStore = new FeatureDataStore();
 		var metrics = createMetrics();
-		var maxAge = 180;
+		var maxAge = 30;
 
 		this.returnMetrics = function(){
 			return metrics;
@@ -36,12 +36,17 @@ class AhaFeature extends Service{
 			// Define the metrics we care about
 			var involvementOfUIInFeatures = new Metric('OODA#DesignInvolvementInFeatures', 'Define the percentage of UI involvement in features', percentageOfFeaturesGoThroughAUILoop);
 
-			var devVelocity = new Metric('Maintenance#DevTeamVelocity', 'Track Weekly developer velocity by measuring past output and averaging', averageWeeklyDevTeamVelocity)
+			var featPassedQA = new Metric('OODA#DevLoopMetrics#PassedQA', 'Measure our effectiveness building and getting through QA', readyToDeployMeasurements);
+			var featInProduction = new Metric('OODA#DevLoopMetrics#InProduction', 'Measure of our effectiveness at getting features to production', inProductionMetrics);
+			var devVelocity = new Metric('Maintenance#DevTeamVelocity', 'Track Weekly developer velocity by measuring past output and averaging', averageWeeklyDevTeamVelocity);
+
+			var thisMonth
 
 			
 			// Add metrics to the list of metrics
 			metrics.push(involvementOfUIInFeatures);
-
+			metrics.push(featPassedQA);
+			metrics.push(featInProduction);
 			metrics.push(devVelocity);
 
 			return metrics;
@@ -73,6 +78,67 @@ class AhaFeature extends Service{
 			var percent = (initiallyDesignedCount/totalCount) * 100;
 			return {
 				percentDesignedBeforeBeingBuilt: percent
+			}
+		}
+
+		async function readyToDeployMeasurements(){
+			var data = await getData();
+
+			var featuresWithStatus = filterListOfFeaturesByStatus(data, 'Ready To Deploy');
+			var result =  performMeasurementsOnAList(featuresWithStatus);
+			return result;
+		}
+
+		async function inProductionMetrics(){
+			var data = await getData();
+
+			var featuresWithStatus = filterListOfFeaturesByStatus(data, 'In Production');
+			var result =  performMeasurementsOnAList(featuresWithStatus);
+			return result;
+		}
+
+		function filterListOfFeaturesByStatus(listOfFeatures,featureStatus){
+			var list = listOfFeatures;
+			var featureStatus = featureStatus;
+
+			var individuals = [];
+			for(var i=0; i<list.length; i++){
+				var individual = list[i];
+				if(individual.workflow_status.name == featureStatus){
+					individuals.push(individual);
+				}
+			}
+			return individuals;
+		}
+
+		function performMeasurementsOnAList(listOfFeatures){
+			var list = listOfFeatures;
+
+			var countOfStatusAchievedInAWeek = 0;
+			var countOfStatusAchievedInAMonth = 0;
+			var totalAge = 0;
+
+			for(var i=0; i<list.length; i++){
+				var individual = list[i];
+
+				var age = DateTimeService.calculateTimeDiff(individual.created_at,individual.updated_at, 'days');
+				totalAge += age;
+
+				if(age <= 30){
+					countOfStatusAchievedInAMonth++;
+				}
+				if(age <= 7){
+					countOfStatusAchievedInAWeek++;
+				}
+			}
+
+			return {
+				totalCountOfStatus: list.length,
+				statusAchievedInAWeekCount: countOfStatusAchievedInAWeek,
+				percentStatusAchievedInAWeek: (countOfStatusAchievedInAMonth/list.length) * 100,
+				statusAchievedInAMonthCount: countOfStatusAchievedInAMonth,
+				percentStatusAchievedInAWeek: (countOfStatusAchievedInAWeek/list.length) * 100,
+				averageAgeToHitStatusInDays: (totalAge/list.length)
 			}
 		}
 

@@ -37,11 +37,14 @@ var url = baseUrl +"/products/"+productId+"/ideas";
 		}
 
 		this.getAllFeatures = async function(){
-		
 			console.log(DateTimeService.now());
+
+			var releases = await this.getAllReleases();
+
 			var url = baseUrl+"/products/"+productId+"/features";
 			var allRecords = await getAllRecords(url);
 			var individualData = await getInDepthData(baseUrl+"/features", allRecords);
+
 
 			for (var i=0; i<individualData.length; i++){
 				var individual = individualData[i];
@@ -49,6 +52,9 @@ var url = baseUrl +"/products/"+productId+"/ideas";
 				var allTasks = await getAllRecords(taskUrl);
 				
 				individualData[i].tasks = allTasks.data;
+				
+				console.log(JSON.stringify(releases[individual.release.id], null,2));
+				//individualData[i].release = releases[individual.release.id];
 			}
 			return individualData;
 		}
@@ -58,6 +64,13 @@ var url = baseUrl +"/products/"+productId+"/ideas";
 			var url = baseUrl+"/products/"+productId+"/ideas";
 			var allRecords = await getAllRecords(url);
 			var individualData = await getInDepthData(baseUrl+"/ideas", allRecords);
+			return individualData;
+		}
+
+		this.getAllReleases = async function(){
+			var url = baseUrl +"/products/"+productId+"/releases";
+			var allRecords = await getAllRecords(url);
+			var individualData = await getInDepthData(baseUrl+"/releases", allRecords);
 			return individualData;
 		}
 
