@@ -32,15 +32,16 @@ class AhaTask extends Service{
 
 		function createMetrics(){
 			var metrics = [];
+			var database = 'BPRMetricData';
 
 			// Define the metrics we care about
-			var fullQAMetrics = new Metric('OODA#FullQA', 'Measurements on how well full QA is performing', fullQAData);
+			var fullQAMetrics = new Metric('OODA#FullQA', 'Measurements on how well full QA is performing', fullQAData, database);
 
-			var nightlyQAMetrics = new Metric('OODA#NightlyQA', 'Measurements on how well nightly QA is performing', nightlyQAData);
+			var nightlyQAMetrics = new Metric('OODA#NightlyQA', 'Measurements on how well nightly QA is performing', nightlyQAData, database);
 
-			var uiUXQAMetrics = new Metric('OODA#DesignMetrics', 'Measurements on how well design is performing', uiUxData);
+			var uiUXQAMetrics = new Metric('OODA#DesignMetrics', 'Measurements on how well design is performing', uiUxData, database);
 
-			var releaseMetrics = new Metric('OODA#ReleaseCycle', 'Measurements on how well releases are being handled', releaseData);
+			var releaseMetrics = new Metric('OODA#ReleaseCycle', 'Measurements on how well releases are being handled', releaseData, database);
 
 			// Add Metric to the Array
 			metrics.push(fullQAMetrics);

@@ -23,7 +23,7 @@ class AhaBug extends Service{
 			var metrics = [];
 
 			// Create Metrics
-			var initialBugMetrics = new Metric('OODA#BugFixes', 'Bug Statistics', getBugFixMetrics);
+			var initialBugMetrics = new Metric('OODA#BugFixes', 'Bug Statistics', getBugFixMetrics, 'BPRMetricData');
 
 			// Add to List
 			metrics.push(initialBugMetrics);

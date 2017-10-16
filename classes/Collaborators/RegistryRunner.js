@@ -4,14 +4,15 @@ const DataPoint = require('../DataObjects/DataPoint.js');
 
 class RegistryRunner{
 	constructor(){
-		const influx = new InfluxDatabase('BPRMetricData');
+		//const influx = new InfluxDatabase('BPRMetricData');
+		const influx = new InfluxDatabase();
 
 		this.run = async function(listOfServices){
 			var services = listOfServices;
 
 			var result = collectMetrics(services);
 			var completedMetrics = await runAllMetrics(result);
-			await saveEachMetric(completedMetrics);
+			await saveMetrics(completedMetrics);
 
 
 			return result;
@@ -45,10 +46,37 @@ class RegistryRunner{
 		 * TODO: define a grafana timeseries database to store the result
 		 * call this, update the tests
 		 */
-		async function saveEachMetric(listOfMetrics){
+		async function saveMetrics(listOfMetrics){
 			
-			var points = convertMetricsToDataPoints(listOfMetrics);
-			influx.writePoints(points);
+			var bins = {
+				
+			};
+
+			for(var i=0; i<listOfMetrics.length; i++){
+				var metric = listOfMetrics[i];
+
+				if(metric.database == null){
+					throw new Error('A metric has an undefined database'+ metric.name +", " + metric.database);
+				}
+				if(bins[metric.database] == null){
+					bins[metric.database] = [];
+				}
+
+				bins[metric.database].push(convertMetricToDataPoint(metric))
+			}
+
+			for(var key in bins){
+				influx.writePoints(key, bins[key]);
+			}
+
+			//var points = convertMetricsToDataPoints(listOfMetrics);
+			//influx.writePoints(points);
+		}
+
+		function convertMetricToDataPoint(metric){
+			var metric = metric;
+
+			return new DataPoint(metric.name, metric.value);
 		}
 
 		function convertMetricsToDataPoints(listOfMetrics){
@@ -58,7 +86,7 @@ class RegistryRunner{
 			for(var i=0; i<listOfMetrics.length; i++){
 				var metric = listOfMetrics[i];
 
-				var point = new DataPoint(metric.name, metric.value);
+				var point = convertMetricsToDataPoints(metric);
 				listOfPoints.push(point);
 			}
 

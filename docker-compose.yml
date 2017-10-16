@@ -5,6 +5,8 @@ services:
   depends_on:
    - "influxdb"
    - "grafana"
+  volumes:
+   - ./data/assistant:./data/assistant
  grafana:
   image: grafana/grafana:latest
   ports:

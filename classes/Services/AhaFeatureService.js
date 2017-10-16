@@ -32,13 +32,14 @@ class AhaFeature extends Service{
 
 		function createMetrics(){
 			var metrics = [];
+			var database = 'BPRMetricData';
 
 			// Define the metrics we care about
-			var involvementOfUIInFeatures = new Metric('OODA#DesignInvolvementInFeatures', 'Define the percentage of UI involvement in features', percentageOfFeaturesGoThroughAUILoop);
+			var involvementOfUIInFeatures = new Metric('OODA#DesignInvolvementInFeatures', 'Define the percentage of UI involvement in features', percentageOfFeaturesGoThroughAUILoop, database);
 
-			var featPassedQA = new Metric('OODA#DevLoopMetrics#PassedQA', 'Measure our effectiveness building and getting through QA', readyToDeployMeasurements);
-			var featInProduction = new Metric('OODA#DevLoopMetrics#InProduction', 'Measure of our effectiveness at getting features to production', inProductionMetrics);
-			var devVelocity = new Metric('Maintenance#DevTeamVelocity', 'Track Weekly developer velocity by measuring past output and averaging', averageWeeklyDevTeamVelocity);
+			var featPassedQA = new Metric('OODA#DevLoopMetrics#PassedQA', 'Measure our effectiveness building and getting through QA', readyToDeployMeasurements, database);
+			var featInProduction = new Metric('OODA#DevLoopMetrics#InProduction', 'Measure of our effectiveness at getting features to production', inProductionMetrics, database);
+			var devVelocity = new Metric('Maintenance#DevTeamVelocity', 'Track Weekly developer velocity by measuring past output and averaging', averageWeeklyDevTeamVelocity, database);
 
 			var thisMonth
 

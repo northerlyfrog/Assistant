@@ -35,7 +35,21 @@ class MysqlApi{
 			return rows;
 		}
 
-		this.getSubscriptionInfo = async function(){
+		this.getClassificationData = async function(){
+			var connection = await connect();
+
+			var data = {};
+
+			var [rows, fields] = await connection.execute(
+				`SELECT COUNT(type_jdoc) AS classifiedAlerts
+				FROM alerts
+				`);
+
+			data.totalClassifiedAlerts = rows[0].classifiedAlerts;
+			return data;
+		}
+
+		this.getSubscriptionData = async function(){
 			var connection = await connect();
 			
 			var data = {};
@@ -45,9 +59,8 @@ class MysqlApi{
 				FROM subscriptions
 				WHERE expired = 'no'`);
 
-			console.log(rows[0].totalSubscriptionCount);
-			
-			data.totalSubscriptionCount = rows[0].totalSubscriptionCount;
+//			data.totalSubscriptionCount = Number(rows[0].totalSubscriptionCount);
+			data.totalCount = Number(rows[0].totalSubscriptionCount);
 
 			var [rows, fields] = await connection.execute(
 				`SELECT COUNT(DISTINCT devices.id) as uniqueDevicesWithSubscriptions
@@ -55,10 +68,15 @@ class MysqlApi{
 				LEFT JOIN subscriptions ON devices.subscription_id = subscriptions.id
 				WHERE subscriptions.expired = "no"`);
 
-			data.totalSubscribedDeviceCount = rows[0].uniqueDevicesWithSubscriptions;
+//			data.totalSubscribedDeviceCount = Number(rows[0].uniqueDevicesWithSubscriptions);
+
+			data.uniqueDevices = Number(rows[0].uniqueDevicesWithSubscriptions);
+
+
 
 			return data;
 		}
+
 /*
 			var totalDevices = await queryData('SELECT COUNT(DISTINCT devices.id) as deviceCount FROM devices LEFT JOIN subscriptions ON devices.subscription_id = subscriptions.id WHERE subscriptions.expired = "no"')
 

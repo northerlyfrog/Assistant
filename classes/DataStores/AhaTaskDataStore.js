@@ -8,7 +8,7 @@ const DateTimeService = require('../Services/DateTimeService.js');
 class AhaTaskDataStore{
 	constructor(){
 		var ahaApi = new AhaApi();
-		var storage = new NodeStorage('./data/TaskStorage.json');
+		var storage = new NodeStorage('./data/assistant/TaskStorage.json');
 
 		var scheduledFetch = schedule.scheduleJob('*/15 * * * *', function(){
 

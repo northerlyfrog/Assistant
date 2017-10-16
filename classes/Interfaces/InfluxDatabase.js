@@ -4,17 +4,13 @@ const Influx = require('influx');
 const config = require('../../config.json');
 
 class InfluxDatabase{
-	constructor(dbName){
-		var databaseName = dbName;
+	constructor(){
 		const influx = new Influx.InfluxDB({
 			host: config.influx.host,
 			port: config.influx.port,
 			username: config.influx.user,
 			password: config.influx.password,
-			database: databaseName
 		});
-
-		createDatabase(databaseName);
 
 		async function createDatabase(dbName){
 			var dbNames = await influx.getDatabaseNames();
@@ -24,8 +20,19 @@ class InfluxDatabase{
 			return 1;
 		}
 
-		this.writePoints = function(arrayOfPoints){
-			influx.writePoints(arrayOfPoints);
+		this.writePoints = function(database,arrayOfPoints){
+
+			createDatabase(database)
+				.then(
+					() => {
+
+						var writeOptions = {
+							database : database
+						};
+						//console.log(JSON.stringify(arrayOfPoints, null, 2));
+						influx.writePoints(arrayOfPoints, writeOptions);
+					}
+				)
 		}
 
 		this.writeMeasurement = function(measurement, listOfdataObjects){

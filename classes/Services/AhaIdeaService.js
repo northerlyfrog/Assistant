@@ -22,7 +22,7 @@ class AhaIdea extends Service{
 		function createMetrics(){
 			var metrics = [];
 
-			var oodaLoop = new Metric('OODA#TotalLoop', 'Measure how responsive the business is to incoming requests', measureOODALoop);
+			var oodaLoop = new Metric('OODA#TotalLoop', 'Measure how responsive the business is to incoming requests', measureOODALoop, 'BPRMetricData');
 			metrics.push(oodaLoop);
 
 			return metrics;
