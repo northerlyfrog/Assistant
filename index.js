@@ -13,12 +13,11 @@ const FeatureService = require('./classes/Services/AhaFeatureService.js');
 const BugService = require('./classes/Services/AhaBugService.js');
 
 const MysqlDataService = require('./classes/Services/MysqlDataService.js');
+const MysqlApi = require('./classes/Interfaces/MysqlApi.js');
 
-console.log('Starting');
+console.log('Starting Metrics');
 runBPRMetrics();
-//runDataGathering();
 runDataGatheringOld();
-
 
 function runBPRMetrics(){
 
@@ -32,37 +31,18 @@ function runBPRMetrics(){
 	var taskService = new TaskService();
 	var featureService = new FeatureService();
 	var bugService = new BugService();
+	var mysqlService = new MysqlDataService();
 	var startingServices = [ideaService, taskService, featureService, bugService];
 
 
 	//WorkflowHack To see instant work
-	assistant.reportOnMetrics(startingServices);
+	//assistant.reportOnMetrics(startingServices);
 
 
 	var runScheduledMetricReport = schedule.scheduleJob('0 * * * 1-5', function(){
 		console.log('Running BPR Metrics');
 		assistant.reportOnMetrics(startingServices)
 	});
-}
-
-function runDataGathering(){
-	var runner = new RegistryRunner();
-	var creator = new RegistryCreator();
-	var reporter = new RegistryReporter();
-	var assistant = new Assistant(creator, runner, reporter);
-
-	var mysqlData = new MysqlDataService();
-
-	var dataCollectors = [mysqlData];
-
-	//WorkflowHack to run instantly
-	assistant.reportOnMetrics(dataCollectors);
-
-	var runDataCollection = schedule.scheduleJob('0 * */2 * 1-5', function(){
-		console.log('Running Data Metrics');
-		assistant.reportOnMetrics(dataCollectors);
-	})
-
 }
 
 function runDataGatheringOld(){
@@ -74,11 +54,11 @@ function runDataGatheringOld(){
 	var mysqlData = new MysqlDataService();
 
 	var dataCollectors = [mysqlData];
-
 	//WorkflowHack to run instantly
 	assistant.reportOnMetrics(dataCollectors);
+	console.log('finished');
 
-	var runDataCollection = schedule.scheduleJob('0 * */2 * 1-5', function(){
+	var runDataCollection = schedule.scheduleJob('0 18 * * 1-5', function(){
 		console.log('Running Data Metrics');
 		assistant.reportOnMetrics(dataCollectors);
 	})

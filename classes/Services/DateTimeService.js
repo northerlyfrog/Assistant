@@ -1,5 +1,6 @@
 'use strict'
 const moment = require('moment');
+const businessDayMoment = require('moment-business-days');
 
 /**
  * Timestamp handling helper class
@@ -14,6 +15,14 @@ class DateTimeService{
 	 */
 	static now(){
 		return moment();
+	}
+
+	static calculateBusinessDayDiff(start, end){
+		
+		var start = businessDayMoment(start);
+		var end = businessDayMoment(end);
+
+		return start.businessDiff(end);
 	}
 
 	static calculateTimeDiff(earlyDate,lateDate, expectedOutput){

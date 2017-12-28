@@ -29,7 +29,6 @@ class InfluxDatabase{
 						var writeOptions = {
 							database : database
 						};
-						//console.log(JSON.stringify(arrayOfPoints, null, 2));
 						influx.writePoints(arrayOfPoints, writeOptions);
 					}
 				)

@@ -1,8 +1,8 @@
 ## InfluxDB admin
 
-This panel duplicates the simple features avaliable in the [Web Admin Interface](https://docs.influxdata.com/influxdb/v1.2/tools/web_admin/).  That UI is now deprecated and disabled by default.
+This panel duplicates features from the now depricated [Web Admin Interface](https://docs.influxdata.com/influxdb/v1.2/tools/web_admin/).
 
-This panel lets you pick see the currently running queries and easily kill them.
+This panel lets you see the currently running queries and easily kill them.
 
 This plugin expects there to be at least one InfluxDB datasource configured.
 
@@ -16,8 +16,36 @@ This plugin expects there to be at least one InfluxDB datasource configured.
 ![Write Data](https://raw.githubusercontent.com/NatelEnergy/grafana-influx-admin/master/src/img/screenshot-write.png)
 
 
+### Building
+
+To complie, run:
+```
+npm install -g yarn
+yarn install --pure-lockfile
+grunt
+```
+
 
 #### Changelog
+
+
+##### v0.0.4
+
+- Fix issue always showing query results
+- When there is only one row, swap rows/cols (ie: SHOW DIAGNOSTICS)
+- Improve auto-refresh behavior.
+- Show 'message' response.  (ie: please use POST)
+- Fix query time sorting
+- show 'status' field (killed, etc)
+
+
+##### v0.0.3
+
+- Converted to typescript project based on [typescript-template-datasource](https://github.com/grafana/typescript-template-datasource)
+- Select Databases.  This only works with [PR#8096](https://github.com/grafana/grafana/pull/8096)
+- Added time format options
+- Show tags from response
+- Support template variables in the query
 
 
 ##### v0.0.2

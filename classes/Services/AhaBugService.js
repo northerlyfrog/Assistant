@@ -47,6 +47,8 @@ class AhaBug extends Service{
 					bugsInTheLastThirtyDays++;
 				}
 
+			//	console.log(individual);
+
 				if(individual.workflow_status.name == 'Fix completed'){
 					age = DateTimeService.calculateTimeDiff(individual.created_at, individual.updated_at, timeMeasurement);
 					completedAges.push(age);

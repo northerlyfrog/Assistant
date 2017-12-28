@@ -25,12 +25,12 @@
       { "name": "Options",         "path": "img/screenshot-options.png" },
       { "name": "Write Data",      "path": "img/screenshot-write.png"   }
     ],
-    "version": "0.0.2",
-    "updated": "2017-03-26"
+    "version": "0.0.4",
+    "updated": "2017-11-17"
   },
 
   "dependencies": {
-    "grafanaVersion": "3.x.x",
+    "grafanaVersion": "4.6.x",
     "plugins": [ ]
   }
 }

@@ -1,25 +1,28 @@
 version: "2"
 services:
- assistant:
-  image: docker-registry.active911.com:5000/bryan.walcott/assistant:latest
-  depends_on:
-   - "influxdb"
-   - "grafana"
-  volumes:
-   - ./data/assistant:./data/assistant
- grafana:
-  image: grafana/grafana:latest
-  ports:
-   - "3000:3000"
-  depends_on:
-   - "influxdb"
-  volumes:
-   - ./data/grafana:/var/lib/grafana
- influxdb:
-  image: influxdb:1.3
-  ports:
-   - "8083:8083"
-   - "8086:8086"
-  volumes:
-   - ./data/influxdb:/var/lib/influxdb
+#  assistant:
+#    image: docker-registry.active911.com:5000/bryan.walcott/assistant:latest
+#    depends_on:
+#      - "influxdb"
+#      - "grafana"
+#    volumes:
+#      - ./data/assistant:/data/assistant
+#    restart: on-failure
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      - "influxdb"
+    volumes:
+      - ./data/grafana:/var/lib/grafana
+    environment:
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,briangann-gauge-panel,natel-influx-admin-panel,btplc-trend-box-panel,neocat-cal-heatmap-panel
+  influxdb:
+    image: influxdb:1.3
+    ports:
+      - "8083:8083"
+      - "8086:8086"
+    volumes:
+      - ./data/influxdb:/var/lib/influxdb
 

@@ -12,6 +12,11 @@ class AhaFeature extends Service{
 		var metrics = createMetrics();
 		var maxAge = 30;
 
+		this.runPMReportInfo = async function(){
+
+			return 1;
+		}
+
 		this.returnMetrics = function(){
 			return metrics;
 		}
@@ -40,8 +45,6 @@ class AhaFeature extends Service{
 			var featPassedQA = new Metric('OODA#DevLoopMetrics#PassedQA', 'Measure our effectiveness building and getting through QA', readyToDeployMeasurements, database);
 			var featInProduction = new Metric('OODA#DevLoopMetrics#InProduction', 'Measure of our effectiveness at getting features to production', inProductionMetrics, database);
 			var devVelocity = new Metric('Maintenance#DevTeamVelocity', 'Track Weekly developer velocity by measuring past output and averaging', averageWeeklyDevTeamVelocity, database);
-
-			var thisMonth
 
 			
 			// Add metrics to the list of metrics

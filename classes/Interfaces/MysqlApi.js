@@ -2,9 +2,13 @@
 
 const config = require('../../config.json');
 const mysql = require('mysql2/promise');
-
+const InfluxDatabase = require('../Interfaces/InfluxDatabase.js');
+const DataPoint = require('../DataObjects/DataPoint.js');
+const DateTimeService = require('../Services/DateTimeService.js');
 class MysqlApi{
 	constructor(){
+	
+		const influx = new InfluxDatabase();
 
 		async function connect(){
 			var connection = mysql.createConnection({
@@ -16,8 +20,44 @@ class MysqlApi{
 			return connection;
 		}
 
+
 		this.getAgencyCohortData = async function(){
-			var connection = await this._connect()
+			var connection = await connect();
+
+			var [rows, fields] = await connection.execute(
+				`SELECT agencies.id,
+					agencies.status as status,
+					agencies.created as created,
+					DATE_FORMAT(agencies.created, '%X/%V') as weekCohort,
+					COUNT(membership.agency_id) as devices
+				FROM agencies
+				LEFT JOIN membership ON agencies.id = membership.agency_id
+				GROUP BY weekCohort,agencies.status,agencies.id`
+			);
+
+			var dataPoints = [];
+			for(var i=0; i<rows.length; i++){
+			//	console.log(rows[i]);
+				var data = rows[i];
+				
+				var fields = {
+					id : data.id,
+					deviceCount: data.devices
+				};
+				var tags = {
+					weekCohort: data.weekCohort,
+					status: data.status
+				};
+				var point = new DataPoint('rawAgencyData', fields, tags, new Date(data.created));
+				dataPoints.push(point);
+			}
+
+			influx.writePoints('AgencyData',dataPoints);
+			return rows;
+		}
+		/*
+		this.getAgencyCohortData = async function(){
+			var connection = await connect()
 
 			var [rows, fields] = await connection.execute(
 				`SELECT DISTINCT
@@ -33,7 +73,12 @@ class MysqlApi{
 				`);
 
 			return rows;
+		}*/
+
+		function sleep(ms){
+			return new Promise(resolve => setTimeout(resolve, ms));
 		}
+
 
 		this.getClassificationData = async function(){
 			var connection = await connect();
@@ -46,12 +91,13 @@ class MysqlApi{
 				`);
 
 			data.totalClassifiedAlerts = rows[0].classifiedAlerts;
+			console.log(data);
 			return data;
 		}
 
 		this.getSubscriptionData = async function(){
 			var connection = await connect();
-			
+
 			var data = {};
 
 			var [rows, fields] = await connection.execute(
@@ -59,7 +105,6 @@ class MysqlApi{
 				FROM subscriptions
 				WHERE expired = 'no'`);
 
-//			data.totalSubscriptionCount = Number(rows[0].totalSubscriptionCount);
 			data.totalCount = Number(rows[0].totalSubscriptionCount);
 
 			var [rows, fields] = await connection.execute(
@@ -68,16 +113,12 @@ class MysqlApi{
 				LEFT JOIN subscriptions ON devices.subscription_id = subscriptions.id
 				WHERE subscriptions.expired = "no"`);
 
-//			data.totalSubscribedDeviceCount = Number(rows[0].uniqueDevicesWithSubscriptions);
-
 			data.uniqueDevices = Number(rows[0].uniqueDevicesWithSubscriptions);
-
-
 
 			return data;
 		}
 
-/*
+		/*
 			var totalDevices = await queryData('SELECT COUNT(DISTINCT devices.id) as deviceCount FROM devices LEFT JOIN subscriptions ON devices.subscription_id = subscriptions.id WHERE subscriptions.expired = "no"')
 
 			results.totalCount = totalCount;
@@ -99,7 +140,7 @@ class MysqlApi{
 				console.log(result);
 				return result;
 			}
-*/
+			*/
 	}
 }
 module.exports = MysqlApi;

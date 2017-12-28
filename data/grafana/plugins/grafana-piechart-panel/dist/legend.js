@@ -43,7 +43,9 @@ System.register(['angular', 'app/core/utils/kbn', 'jquery', 'jquery.flot', 'jque
               var el = $(e.currentTarget);
               var index = getSeriesIndexForElement(el);
               var seriesInfo = seriesList[index];
-              ctrl.toggleSeries(seriesInfo, e);
+              var scrollPosition = $($container.children('tbody')).scrollTop();
+              ctrl.toggleSeries(seriesInfo);
+              $($container.children('tbody')).scrollTop(scrollPosition);
             }
 
             function sortLegend(e) {
@@ -58,13 +60,42 @@ System.register(['angular', 'app/core/utils/kbn', 'jquery', 'jquery.flot', 'jque
               if (panel.legend.sortDesc === false) {
                 panel.legend.sort = null;
                 panel.legend.sortDesc = null;
-                render();
+                ctrl.render();
                 return;
               }
 
               panel.legend.sortDesc = !panel.legend.sortDesc;
               panel.legend.sort = stat;
-              render();
+              ctrl.render();
+            }
+
+            function getLegendHeaderHtml(statName) {
+              var name = statName;
+
+              if (panel.legend.header) {
+                name = panel.legend.header;
+              }
+
+              var html = '<th class="pointer" data-stat="' + statName + '">' + name;
+
+              if (panel.legend.sort === statName) {
+                var cssClass = panel.legend.sortDesc ? 'fa fa-caret-down' : 'fa fa-caret-up';
+                html += ' <span class="' + cssClass + '"></span>';
+              }
+
+              return html + '</th>';
+            }
+
+            function getLegendPercentageHtml(statName) {
+              var name = 'percentage';
+              var html = '<th class="pointer" data-stat="' + statName + '">' + name;
+
+              if (panel.legend.sort === statName) {
+                var cssClass = panel.legend.sortDesc ? 'fa fa-caret-down' : 'fa fa-caret-up';
+                html += ' <span class="' + cssClass + '"></span>';
+              }
+
+              return html + '</th>';
             }
 
             function openColorSelector(e) {
@@ -81,7 +112,7 @@ System.register(['angular', 'app/core/utils/kbn', 'jquery', 'jquery.flot', 'jque
                 popoverSrv.show({
                   element: el[0],
                   position: 'bottom center',
-                  template: '<gf-color-picker></gf-color-picker>',
+                  template: '<series-color-picker series="series" onToggleAxis="toggleAxis" onColorChange="colorSelected">' + '</series-color-picker>',
                   openOn: 'hover',
                   model: {
                     autoClose: true,
@@ -104,6 +135,7 @@ System.register(['angular', 'app/core/utils/kbn', 'jquery', 'jquery.flot', 'jque
               if (firstRender) {
                 elem.append($container);
                 $container.on('click', '.graph-legend-icon', openColorSelector);
+                $container.on('click', '.graph-legend-alias', toggleSeries);
                 $container.on('click', 'th', sortLegend);
                 firstRender = false;
               }
@@ -117,16 +149,17 @@ System.register(['angular', 'app/core/utils/kbn', 'jquery', 'jquery.flot', 'jque
 
               $container.toggleClass('graph-legend-table', tableLayout);
 
+              var legendHeader;
               if (tableLayout) {
                 var header = '<tr><th colspan="2" style="text-align:left"></th>';
                 if (panel.legend.values) {
-                  header += '<th class="pointer">values</th>';
+                  header += getLegendHeaderHtml(ctrl.panel.valueName);
                 }
                 if (panel.legend.percentage) {
-                  header += '<th class="pointer">percentage</th>';
+                  header += getLegendPercentageHtml(ctrl.panel.valueName);
                 }
                 header += '</tr>';
-                $container.append($(header));
+                legendHeader = $(header);
               }
 
               if (panel.legend.sort) {
@@ -145,8 +178,12 @@ System.register(['angular', 'app/core/utils/kbn', 'jquery', 'jquery.flot', 'jque
                 }
               }
 
+              var seriesShown = 0;
+              var seriesElements = [];
+
               for (i = 0; i < seriesList.length; i++) {
                 var series = seriesList[i];
+                var seriesData = ctrl.data[i];
 
                 // ignore empty series
                 if (panel.legend.hideEmpty && series.allIsNull) {
@@ -157,29 +194,54 @@ System.register(['angular', 'app/core/utils/kbn', 'jquery', 'jquery.flot', 'jque
                   continue;
                 }
 
+                var decimal = 2;
+                if (ctrl.panel.legend.percentageDecimals) {
+                  decimal = ctrl.panel.legend.percentageDecimals;
+                }
+
                 var html = '<div class="graph-legend-series';
+                if (ctrl.hiddenSeries[series.alias]) {
+                  html += ' graph-legend-series-hidden';
+                }
                 html += '" data-series-index="' + i + '">';
                 html += '<span class="graph-legend-icon" style="float:none;">';
-                html += '<i class="fa fa-minus pointer" style="color:' + series.color + '"></i>';
+                html += '<i class="fa fa-minus pointer" style="color:' + seriesData.color + '"></i>';
                 html += '</span>';
 
-                html += '<span class="graph-legend-alias" style="float:none;">';
-                html += '<a>' + series.label + '</a>';
-                html += '</span>';
+                html += '<a class="graph-legend-alias" style="float:none;">' + seriesData.label + '</a>';
 
                 if (showValues && tableLayout) {
-                  var value = series.formatValue(series.stats[ctrl.panel.valueName]);
+                  var value = series.stats[ctrl.panel.valueName];
                   if (panel.legend.values) {
                     html += '<div class="graph-legend-value">' + ctrl.formatValue(value) + '</div>';
                   }
                   if (total) {
-                    var pvalue = (value / total * 100).toFixed(2) + '%';
+                    var pvalue = (value / total * 100).toFixed(decimal) + '%';
                     html += '<div class="graph-legend-value">' + pvalue + '</div>';
                   }
                 }
 
                 html += '</div>';
-                $container.append($(html));
+
+                seriesElements.push($(html));
+                seriesShown++;
+              }
+
+              if (tableLayout) {
+                var maxHeight = ctrl.height;
+
+                if (panel.legendType === 'Under graph') {
+                  maxHeight = maxHeight / 2;
+                }
+
+                var topPadding = 6;
+                var tbodyElem = $('<tbody></tbody>');
+                tbodyElem.css("max-height", maxHeight - topPadding);
+                tbodyElem.append(legendHeader);
+                tbodyElem.append(seriesElements);
+                $container.append(tbodyElem);
+              } else {
+                $container.append(seriesElements);
               }
             }
           }

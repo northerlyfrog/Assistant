@@ -10,6 +10,7 @@ export class PieChartCtrl extends MetricsPanelCtrl {
   constructor($scope, $injector, $rootScope) {
     super($scope, $injector);
     this.$rootScope = $rootScope;
+    this.hiddenSeries = {};
 
     var panelDefaults = {
       pieType: 'pie',
@@ -30,10 +31,10 @@ export class PieChartCtrl extends MetricsPanelCtrl {
       valueName: 'current',
       strokeWidth: 1,
       fontSize: '80%',
-	  combine: {
-	    threshold: 0.0,
-	    label: 'Others'
-	  }
+      combine: {
+        threshold: 0.0,
+        label: 'Others'
+      }
     };
 
     _.defaults(this.panel, panelDefaults);
@@ -147,6 +148,15 @@ export class PieChartCtrl extends MetricsPanelCtrl {
 
   link(scope, elem, attrs, ctrl) {
     rendering(scope, elem, attrs, ctrl);
+  }
+
+  toggleSeries(serie) {
+    if (this.hiddenSeries[serie.label]) {
+      delete this.hiddenSeries[serie.alias];
+    } else {
+      this.hiddenSeries[serie.label] = true;
+    }
+    this.render();
   }
 }
 

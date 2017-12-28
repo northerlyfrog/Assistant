@@ -1,53 +1,115 @@
-module.exports = (grunt) => {
+module.exports = function(grunt) {
   require('load-grunt-tasks')(grunt);
 
-  grunt.loadNpmTasks('grunt-execute');
+  var pkgJson = require('./package.json');
+
   grunt.loadNpmTasks('grunt-contrib-clean');
+  grunt.loadNpmTasks('grunt-typescript');
+  grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-string-replace');
 
   grunt.initConfig({
-
     clean: ['dist'],
 
     copy: {
-      src_to_dist: {
-        cwd: 'src',
+      hack_grafana_sdk: { // See: https://github.com/grafana/grafana-sdk-mocks/issues/1
         expand: true,
-        src: ['**/*', '!**/*.js'],
+        flatten: true,
+        cwd: 'hack',
+        src: ['*.ts'],
+        dest: 'node_modules/grafana-sdk-mocks/app/headers'
+      },
+
+      dist_js: {
+        expand: true,
+        cwd: 'src',
+        src: ['**/*.ts', '**/*.d.ts'],
         dest: 'dist'
       },
-      pluginDef: {
+      dist_html: {
         expand: true,
-        src: ['README.md'],
+        flatten: true,
+        cwd: 'src/partials',
+        src: ['*.html'],
+        dest: 'dist/partials/'
+      },
+      dist_css: {
+        expand: true,
+        flatten: true,
+        cwd: 'src/css',
+        src: ['*.css'],
+        dest: 'dist/css/'
+      },
+      dist_img: {
+        expand: true,
+        flatten: true,
+        cwd: 'src/img',
+        src: ['*.*'],
+        dest: 'dist/img/'
+      },
+      dist_statics: {
+        expand: true,
+        flatten: true,
+        src: ['src/plugin.json', 'LICENSE', 'README.md'],
+        dest: 'dist/'
+      }
+    },
+
+    typescript: {
+      build: {
+        src: ['dist/**/*.ts', '!**/*.d.ts'],
         dest: 'dist',
-      },
+        options: {
+          module: 'system',
+          target: 'es5',
+          rootDir: 'dist/',
+          declaration: true,
+          emitDecoratorMetadata: true,
+          experimentalDecorators: true,
+          sourceMap: true,
+          noImplicitAny: false,
+        }
+      }
     },
 
-    watch: {
-      rebuild_all: {
-        files: ['src/**/*'],
-        tasks: ['default'],
-        options: {spawn: false}
-      },
-    },
-
-    babel: {
-      options: {
-        sourceMap: true,
-        presets: ['es2015'],
-        plugins: ['transform-es2015-modules-systemjs', 'transform-es2015-for-of'],
-      },
+    'string-replace': {
       dist: {
         files: [{
           cwd: 'src',
           expand: true,
-          src: ['*.js'],
-          dest: 'dist',
-          ext: '.js'
-        }]
-      },
+          src: ["**/plugin.json"],
+          dest: 'dist'
+        }],
+        options: {
+          replacements: [{
+            pattern: '%VERSION%',
+            replacement: pkgJson.version
+          },{
+            pattern: '%TODAY%',
+            replacement: '<%= grunt.template.today("yyyy-mm-dd") %>'
+          }]
+        }
+      }
     },
 
+    watch: {
+      files: ['src/**/*.ts', 'src/**/*.html', 'src/**/*.css', 'src/img/*.*', 'src/plugin.json', 'README.md'],
+      tasks: ['default'],
+      options: {
+        debounceDelay: 250,
+      },
+    }
   });
 
-  grunt.registerTask('default', ['clean', 'copy:src_to_dist', 'copy:pluginDef', 'babel']);
+  grunt.registerTask('default', [
+    'clean',
+    'copy:hack_grafana_sdk',
+    'copy:dist_js',
+    'typescript:build',
+    'copy:dist_html',
+    'copy:dist_css',
+    'copy:dist_img',
+    'copy:dist_statics',
+    'string-replace'
+  ]);
 };

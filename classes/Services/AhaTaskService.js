@@ -19,7 +19,7 @@ class AhaTask extends Service{
 		async function getData(){
 			var result = [];
 			var initialResult = await dataStore.getAllData();
-			
+
 			for(var i=0; i<initialResult.length; i++){
 				var individual = initialResult[i];
 
@@ -55,22 +55,37 @@ class AhaTask extends Service{
 		async function fullQAData(){
 			var data = await getData();
 
-			var list = sortListByNameFilter(data, /(F|f)ull/);
+			var list = sortListByNameFilter(data, /(F|f)ull/i);
 
 			var averageAgeOfCompleted = calculateAgeOfCompletedItems(list, 'hours');
 			var percentCompleteOnTime = calculateCompletionRateGivenAList(list);
 			var percentDoneWithin4Hours = calculatePercentageOfItemsCompleteWithinATimeframe(list, 4, 'hours');
 
+			var q4Tasks = [];
+			for (var i=0; i<list.length; i++){
+				var individual = list[i];
+
+				if(DateTimeService.firstTimeIsBeforeSecondTime(new Date(2017, 8, 30, 0, 0), individual.created_at)){
+					q4Tasks.push(individual);
+				}
+			}
+
+			var q4averageCompletionAge = calculateAgeOfCompletedItemsUsingBusinessHours(q4Tasks, 'hours');
+
 			return {
 				averageCompletionAgeInHours: averageAgeOfCompleted,
 				percentCompleteByDueDate: percentCompleteOnTime,
-				percentageDoneWithin4Hours: percentDoneWithin4Hours
+				percentageDoneWithin4Hours: percentDoneWithin4Hours,
+				q4TotalNumberOfTasks: q4Tasks.length,
+				averageBusinessHourCompletionAgeinQ42017: q4averageCompletionAge,
+				q4TotalNumberCompletedIn4Hours: calculatePercentageOfItemsCompleteWithinATimeframe(q4Tasks, 4, 'hours'),
+				
 			}
 		}
 
 		async function nightlyQAData(){
 			var data = await getData();
-			var list = sortListByNameFilter(data, /(N|n)ightly/);
+			var list = sortListByNameFilter(data, /(N|n)ightly/i);
 
 			var averageAge = calculateAgeOfCompletedItems(list, 'hours');
 			var percentCompleteOnTime = calculateCompletionRateGivenAList(list);
@@ -110,6 +125,38 @@ class AhaTask extends Service{
 		async function accountabilityByPerson(){
 			var averageOfEveryone;
 		}
+
+		function calculateAgeOfCompletedItemsUsingBusinessHours(listOfItems, timeMeasurement){
+			var list = listOfItems;
+			var timeMeasurement = timeMeasurement;
+			if(timeMeasurement == null){
+				timeMeasurement = 'hours';
+			}
+
+			var ages = [];
+			for(var i=0; i<list.length; i++){
+				var individual = list[i];
+
+				if(individual.status == 'completed'){
+					var age = DateTimeService.calculateTimeDiff(individual.created_at,individual.updated_at, timeMeasurement);
+
+					var businessDays = DateTimeService.calculateBusinessDayDiff(individual.created_at, individual.updated_at)
+					if(businessDays > 1){
+					 age =  (businessDays * 8);
+					}
+
+					// No item should be completed in under 6 mintues
+					if(age >= .10){
+						ages.push(age);
+					}
+				}
+
+			}
+
+			var averageAge = calculateAverageGivenAges(ages);
+			return averageAge;
+		}
+
 
 		function calculateAgeOfCompletedItems(listOfItems, timeMeasurement){
 			var list = listOfItems;
@@ -173,24 +220,30 @@ class AhaTask extends Service{
 			return newList;
 		}
 
-
 		function calculateCompletionRateGivenAList(list){
 			var list = list;
 
+			var completed = 0;
 			var completedSuccessfully = 0;
 			for(var i=0; i<list.length; i++){
 				var individual = list[i];
 
 				if(individual.status == 'completed'){
+					completed++;
 					var completedAt = individual.updated_at;
 					var dueAt = DateTimeService.addTime(individual.due_date, 1, 'day');
+
+					// Set a default due date a week after creation if one is missing
+					if(individual.due_date == null){
+						dueAt = DateTimeService.addTime(individual.created_at, 7, 'day');
+					}
 					if(DateTimeService.firstTimeIsBeforeSecondTime(completedAt, dueAt)){
 						completedSuccessfully++;
-					}
-				}
+					} 
+				}	
 			}
 
-			return (completedSuccessfully/list.length) * 100;
+			return (completedSuccessfully/completed) * 100;
 		}
 
 		function calculateAverageGivenAges(ages){
