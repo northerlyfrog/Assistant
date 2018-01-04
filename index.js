@@ -29,14 +29,14 @@ function runBPRMetrics(){
 
 	var ideaService = new IdeaService();
 	var taskService = new TaskService();
-	var featureService = new FeatureService();
+	//var featureService = new FeatureService();
 	var bugService = new BugService();
 	var mysqlService = new MysqlDataService();
-	var startingServices = [ideaService, taskService, featureService, bugService];
+	var startingServices = [ideaService, taskService, bugService];
 
 
 	//WorkflowHack To see instant work
-	//assistant.reportOnMetrics(startingServices);
+	assistant.reportOnMetrics(startingServices);
 
 
 	var runScheduledMetricReport = schedule.scheduleJob('0 * * * 1-5', function(){
