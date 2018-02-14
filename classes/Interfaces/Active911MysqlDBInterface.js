@@ -5,7 +5,7 @@ const mysql = require('mysql2/promise');
 const InfluxDatabase = require('../Interfaces/InfluxDatabase.js');
 const DataPoint = require('../DataObjects/DataPoint.js');
 const DateTimeService = require('../Services/DateTimeService.js');
-class MysqlApi{
+class Active911MysqlInterface{
 	constructor(){
 	
 		const influx = new InfluxDatabase();
@@ -20,60 +20,51 @@ class MysqlApi{
 			return connection;
 		}
 
+		this.collectData = function(){
+			this.getAgencyCohortData();
+		}
 
 		this.getAgencyCohortData = async function(){
 			var connection = await connect();
 
 			var [rows, fields] = await connection.execute(
 				`SELECT agencies.id,
-					agencies.status as status,
-					agencies.created as created,
-					DATE_FORMAT(agencies.created, '%X/%V') as weekCohort,
-					COUNT(membership.agency_id) as devices
+				agencies.status as status,
+				agencies.created as created,
+				DATE_FORMAT(agencies.created, '%X/%V') as weekCohort,
+				COUNT(membership.agency_id) as devices
 				FROM agencies
 				LEFT JOIN membership ON agencies.id = membership.agency_id
 				GROUP BY weekCohort,agencies.status,agencies.id`
 			);
 
+			normalizeAndSaveAgencyCohortData(rows);
+
+			return rows;
+		}
+
+		function normalizeAndSaveAgencyCohortData(data){
+			var rows = data;
 			var dataPoints = [];
 			for(var i=0; i<rows.length; i++){
-			//	console.log(rows[i]);
+				//	console.log(rows[i]);
 				var data = rows[i];
-				
+
 				var fields = {
 					id : data.id,
 					deviceCount: data.devices
 				};
 				var tags = {
 					weekCohort: data.weekCohort,
-					status: data.status
+					status: data.status,
+					agencyId : data.id
 				};
 				var point = new DataPoint('rawAgencyData', fields, tags, new Date(data.created));
 				dataPoints.push(point);
 			}
 
-			influx.writePoints('AgencyData',dataPoints);
-			return rows;
+			influx.writePoints(dataPoints);
 		}
-		/*
-		this.getAgencyCohortData = async function(){
-			var connection = await connect()
-
-			var [rows, fields] = await connection.execute(
-				`SELECT DISTINCT
-				agencies.id,
-				agencies.country as country, 
-				agencies.status as status,
-				DATE_FORMAT(agencies.created, '%m/%d/%y') AS created,
-				COUNT(membership.agency_id) as devices
-				FROM agencies 
-				LEFT JOIN membership ON agencies.id = membership.agency_id
-				GROUP BY agencies.id
-				ORDER BY agencies.id DESC
-				`);
-
-			return rows;
-		}*/
 
 		function sleep(ms){
 			return new Promise(resolve => setTimeout(resolve, ms));
@@ -143,4 +134,4 @@ class MysqlApi{
 			*/
 	}
 }
-module.exports = MysqlApi;
+module.exports = Active911MysqlInterface;

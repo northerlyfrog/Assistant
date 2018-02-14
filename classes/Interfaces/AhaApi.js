@@ -7,9 +7,18 @@ const ProgressBar = require('progress');
 
 const HttpService = require('./httpService.js');
 const DateTimeService = require('../Services/DateTimeService.js');
+const InfluxDatabase = require('../Interfaces/InfluxDatabase.js')
+const DataPoint = require('../DataObjects/DataPoint.js');
 
 class AhaApi{
 	constructor(){
+
+		const influx = new InfluxDatabase();
+
+		this.collectData = function(){
+			this.getAllTasks();
+			this.getAllFeatures();
+		}
 
 		var apiKey = config.aha.key;
 		var headers = {
@@ -34,7 +43,50 @@ var url = baseUrl +"/products/"+productId+"/ideas";
 			var url = baseUrl + "/tasks";
 			var allRecords = await getAllRecords(url);
 			var individualData = await getInDepthData(url+"/", allRecords);
+
+			normalizeAndSaveTaskData(individualData);
 			return individualData;
+
+		}
+
+		function normalizeAndSaveTaskData(individualData){
+			var tasks = individualData;
+			var dataPoints = [];
+			
+			for (var i=0; i<tasks.length; i++){
+				
+				var task = tasks[i];
+
+				var fields = {
+					id : task.id
+				};
+
+				var tags = {
+					status : task.status,
+					assignedTo: task.assigned_to_users[0].user.name,
+					completedOnTime: determineIfTaskWasDoneOnTime(task)
+				}
+
+				var point = new DataPoint('rawTaskData', fields, tags, new Date(task.created_at));
+				dataPoints.push(point);
+			}
+
+			influx.writePoints(dataPoints);
+		}
+
+		function determineIfTaskWasDoneOnTime(task){
+			var task = task;
+			var taskDoneOnTime = 'pending'
+
+			if(task.status == 'completed'){
+				if(DateTimeService.firstTimeIsBeforeSecondTime(task.updated_at, task.due_date)){
+					taskDoneOnTime = 'true'
+				} else {
+					taskDoneOnTime = 'false'
+				}
+			}
+
+			return taskDoneOnTime;
 		}
 
 		this.getAllFeatures = async function(){
@@ -45,16 +97,64 @@ var url = baseUrl +"/products/"+productId+"/ideas";
 			var allRecords = await getAllRecords(url);
 			var individualData = await getInDepthData(baseUrl+"/features", allRecords);
 
-
-			for (var i=0; i<individualData.length; i++){
+			normalizeAndSaveFeatureData(individualData);
+			/*for (var i=0; i<individualData.length; i++){
 				var individual = individualData[i];
 				var taskUrl = baseUrl+"/features/"+individual.id+"/tasks";
 				var allTasks = await getAllRecords(taskUrl);
 				
 				individualData[i].tasks = allTasks.data;
-			}
+			}*/
 			return individualData;
 		}
+
+		function normalizeAndSaveFeatureData(individualData){
+			var group = individualData;
+			var dataPoints = [];
+
+			for (var i=0; i<group.length; i++){
+
+				var individual = group[i];
+
+				var fields = {
+					id : individual.id,
+					url: individual.url,
+					points: determineEstimate(individual)
+				};
+
+				var tags = {
+					status : individual.workflow_status.name,
+					points : determineEstimate(individual),
+					assignedTo: determineAssignee(individual),
+					createdOn: individual.created_at
+				}
+
+				var point = new DataPoint('rawFeatureData', fields, tags, new Date(individual.updated_at));
+				dataPoints.push(point);
+			}
+
+			influx.writePoints(dataPoints);
+		}
+
+		function determineEstimate(item){
+			var estimate = item.original_estimate;
+
+			if(!estimate){
+				estimate = 0;
+			}
+			return estimate;
+		}
+
+		function determineAssignee(item){
+			var assignee = 'unassigned';
+
+			if(item.assigned_to_user !== null){
+				assignee = item.assigned_to_user.name;
+			}
+
+			return assignee;
+		}
+
 
 		this.getAllBugs = async function(){
 			var productId = await getProductIdByKey('A911BUG');
@@ -108,6 +208,7 @@ var url = baseUrl +"/products/"+productId+"/ideas";
 				var individual = allRecords.data[i];
 				var url = preIdUrl+"/"+individual.id;
 				var response = await HttpService.makeJsonRequest(setCallParameters(url));
+
 				var result = interpretResponse(response);
 				individualData.push(result.data);
 				bar.tick();

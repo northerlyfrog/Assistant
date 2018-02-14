@@ -13,11 +13,16 @@ const FeatureService = require('./classes/Services/AhaFeatureService.js');
 const BugService = require('./classes/Services/AhaBugService.js');
 
 const MysqlDataService = require('./classes/Services/MysqlDataService.js');
-const MysqlApi = require('./classes/Interfaces/MysqlApi.js');
+const MysqlApi = require('./classes/Interfaces/Active911MysqlDBInterface.js');
+const AhaApi = require('./classes/Interfaces/AhaApi.js');
 
 console.log('Starting Metrics');
-runBPRMetrics();
-runDataGatheringOld();
+
+//schedule.scheduleJob('0 0 * * * *', runBPRMetrics);
+//runBPRMetrics();
+
+schedule.scheduleJob('0 30 */2 * * *', gatherRawData);
+gatherRawData();
 
 function runBPRMetrics(){
 
@@ -29,47 +34,23 @@ function runBPRMetrics(){
 
 	var ideaService = new IdeaService();
 	var taskService = new TaskService();
-	//var featureService = new FeatureService();
+	var featureService = new FeatureService();
 	var bugService = new BugService();
 	var mysqlService = new MysqlDataService();
-	var startingServices = [ideaService, taskService, bugService];
+	var startingServices = [ideaService, taskService, bugService, mysqlService];
 
 
 	//WorkflowHack To see instant work
 	assistant.reportOnMetrics(startingServices);
-
-
-	var runScheduledMetricReport = schedule.scheduleJob('0 * * * 1-5', function(){
-		console.log('Running BPR Metrics');
-		assistant.reportOnMetrics(startingServices)
-	});
 }
 
-function runDataGatheringOld(){
-	var runner = new RegistryRunner();
-	var creator = new RegistryCreator();
-	var reporter = new RegistryReporter();
-	var assistant = new Assistant(creator, runner, reporter);
+function gatherRawData(){
+	var active911MysqlInterface = new MysqlApi();
+	active911MysqlInterface.collectData();
 
-	var mysqlData = new MysqlDataService();
-
-	var dataCollectors = [mysqlData];
-	//WorkflowHack to run instantly
-	assistant.reportOnMetrics(dataCollectors);
-	console.log('finished');
-
-	var runDataCollection = schedule.scheduleJob('0 18 * * 1-5', function(){
-		console.log('Running Data Metrics');
-		assistant.reportOnMetrics(dataCollectors);
-	})
-
+	var ahaInterface = new AhaApi();
+	ahaInterface.collectData();
 }
 
-/*
-var subscriptionDataStore = new SubscriptionDataStore();
-var runScheduledDataCollection = schedule.scheduleJob(rule, function(){
-	console.log('Running Data Collection');
-	subscriptionDataStore.getAllData()
-});
-*/
+
 

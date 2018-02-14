@@ -20,14 +20,14 @@ class InfluxDatabase{
 			return 1;
 		}
 
-		this.writePoints = function(database,arrayOfPoints){
+		this.writePoints = function(arrayOfPoints){
 
-			createDatabase(database)
+			createDatabase('Metrics')
 				.then(
 					() => {
 
 						var writeOptions = {
-							database : database
+							database : 'Metrics'
 						};
 						influx.writePoints(arrayOfPoints, writeOptions);
 					}

@@ -2,7 +2,7 @@
 const Service = require('./Service.js');
 const Metric = require('../DataObjects/Metric.js');
 const DateTimeService = require('../Services/DateTimeService.js');
-const MysqlApi = require('../Interfaces/MysqlApi.js');
+const MysqlApi = require('../Interfaces/Active911MysqlDBInterface.js');
 
 class MysqlDataService extends Service{
 	constructor(){

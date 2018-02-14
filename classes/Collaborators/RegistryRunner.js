@@ -66,7 +66,7 @@ class RegistryRunner{
 			}
 
 			for(var key in bins){
-				influx.writePoints(key, bins[key]);
+				influx.writePoints(bins[key]);
 			}
 
 			//var points = convertMetricsToDataPoints(listOfMetrics);
