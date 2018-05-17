@@ -39,7 +39,8 @@ class Active911MysqlInterface{
 			);
 
 			normalizeAndSaveAgencyCohortData(rows);
-
+		
+			await connection.end();
 			return rows;
 		}
 
@@ -82,7 +83,9 @@ class Active911MysqlInterface{
 				`);
 
 			data.totalClassifiedAlerts = rows[0].classifiedAlerts;
-			console.log(data);
+		//	console.log(data);
+			
+			await connection.end();
 			return data;
 		}
 
@@ -106,6 +109,7 @@ class Active911MysqlInterface{
 
 			data.uniqueDevices = Number(rows[0].uniqueDevicesWithSubscriptions);
 
+			await connection.end();
 			return data;
 		}
 
