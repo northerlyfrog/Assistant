@@ -28,5 +28,14 @@ class HttpService{
 			)
 		return response;
 	}
+
+	static setCallParameters(url,headers,options){
+		var parameters = {
+			uri:url,
+			headers: headers,
+			json: true
+		}
+		return parameters;
+	}
 }
 module.exports = HttpService;

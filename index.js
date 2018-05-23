@@ -15,13 +15,14 @@ const BugService = require('./classes/Services/AhaBugService.js');
 const MysqlDataService = require('./classes/Services/MysqlDataService.js');
 const MysqlApi = require('./classes/Interfaces/Active911MysqlDBInterface.js');
 const AhaApi = require('./classes/Interfaces/AhaApi.js');
+const JiraApi = require('./classes/Interfaces/Active911Jira.js');
 
 console.log('Starting Metrics');
 
 //schedule.scheduleJob('0 0 * * * *', runBPRMetrics);
 //runBPRMetrics();
 
-schedule.scheduleJob('0 30 */2 * * *', gatherRawData);
+schedule.scheduleJob('0 30 * * * *', gatherRawData);
 gatherRawData();
 
 function runBPRMetrics(){
@@ -45,11 +46,13 @@ function runBPRMetrics(){
 }
 
 function gatherRawData(){
-	var active911MysqlInterface = new MysqlApi();
-	active911MysqlInterface.collectData();
 
-	var ahaInterface = new AhaApi();
-	ahaInterface.collectData();
+	var jiraInterface = new JiraApi();
+	jiraInterface.collectData();
+
+	//var active911MysqlInterface = new MysqlApi();
+	//active911MysqlInterface.collectData();
+	
 }
 
 

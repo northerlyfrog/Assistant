@@ -7,22 +7,24 @@ services:
       - "grafana"
     volumes:
       - ./data/assistant:/data/assistant
-    restart: on-failure
+    restart: always
+    mem_limit: 2000000000
+    cpu_percent: 15
     environment:
       - SET_CONTAINER_TIMEZONE=true
       - CONTAINER_TIMEZONE=America/Los_Angeles
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
-    depends_on:
-      - "influxdb"
-    volumes:
-      - ./data/grafana:/var/lib/grafana
-    environment:
-      - GF_INSTALL_PLUGINS=grafana-piechart-panel,briangann-gauge-panel,natel-influx-admin-panel,btplc-trend-box-panel,neocat-cal-heatmap-panel
-      - SET_CONTAINER_TIMEZONE=true
-      - CONTAINER_TIMEZONE=America/Los_Angeles
+#  grafana:
+#    image: grafana/grafana:latest
+#    ports:
+#      - "3000:3000"
+#    depends_on:
+#      - "influxdb"
+#    volumes:
+#      - ./data/grafana:/var/lib/grafana
+#    environment:
+#      - GF_INSTALL_PLUGINS=grafana-piechart-panel,briangann-gauge-panel,natel-influx-admin-panel,btplc-trend-box-panel,neocat-cal-heatmap-panel
+#      - SET_CONTAINER_TIMEZONE=true
+#      - CONTAINER_TIMEZONE=America/Los_Angeles
   influxdb:
     image: influxdb:1.3
     ports:
@@ -30,6 +32,9 @@ services:
       - "8086:8086"
     volumes:
       - ./data/influxdb:/var/lib/influxdb
+    restart: always
+    mem_limit: 2000000000
+    cpu_percent: 10
     environment:
       - SET_CONTAINER_TIMEZONE=true
       - CONTAINER_TIMEZONE=America/Los_Angeles
