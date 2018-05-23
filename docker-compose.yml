@@ -9,7 +9,7 @@ services:
       - ./data/assistant:/data/assistant
     restart: always
     mem_limit: 2000000000
-    cpu_count: 1
+    cpuset: 1
     environment:
       - SET_CONTAINER_TIMEZONE=true
       - CONTAINER_TIMEZONE=America/Los_Angeles
@@ -34,7 +34,7 @@ services:
       - ./data/influxdb:/var/lib/influxdb
     restart: always
     mem_limit: 2000000000
-    cpu_count: 1
+    cpuset: 2
     environment:
       - SET_CONTAINER_TIMEZONE=true
       - CONTAINER_TIMEZONE=America/Los_Angeles
