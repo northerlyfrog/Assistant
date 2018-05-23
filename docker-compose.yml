@@ -4,12 +4,12 @@ services:
     image: docker-registry.active911.com:5000/bryan.walcott/assistant:latest
     depends_on:
       - "influxdb"
-      - "grafana"
+#      - "grafana"
     volumes:
       - ./data/assistant:/data/assistant
     restart: always
     mem_limit: 2000000000
-    cpu_percent: 15
+    cpu_count: 1
     environment:
       - SET_CONTAINER_TIMEZONE=true
       - CONTAINER_TIMEZONE=America/Los_Angeles
@@ -34,7 +34,7 @@ services:
       - ./data/influxdb:/var/lib/influxdb
     restart: always
     mem_limit: 2000000000
-    cpu_percent: 10
+    cpu_count: 1
     environment:
       - SET_CONTAINER_TIMEZONE=true
       - CONTAINER_TIMEZONE=America/Los_Angeles
