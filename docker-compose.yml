@@ -4,27 +4,27 @@ services:
     image: docker-registry.active911.com:5000/bryan.walcott/assistant:latest
     depends_on:
       - "influxdb"
-#      - "grafana"
+      - "grafana"
     volumes:
       - ./data/assistant:/data/assistant
     restart: always
     mem_limit: 2000000000
-    cpuset: 1
+    cpuset: '1'
     environment:
       - SET_CONTAINER_TIMEZONE=true
       - CONTAINER_TIMEZONE=America/Los_Angeles
-#  grafana:
-#    image: grafana/grafana:latest
-#    ports:
-#      - "3000:3000"
-#    depends_on:
-#      - "influxdb"
-#    volumes:
-#      - ./data/grafana:/var/lib/grafana
-#    environment:
-#      - GF_INSTALL_PLUGINS=grafana-piechart-panel,briangann-gauge-panel,natel-influx-admin-panel,btplc-trend-box-panel,neocat-cal-heatmap-panel
-#      - SET_CONTAINER_TIMEZONE=true
-#      - CONTAINER_TIMEZONE=America/Los_Angeles
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      - "influxdb"
+    volumes:
+      - ./data/grafana:/var/lib/grafana
+    environment:
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,briangann-gauge-panel,natel-influx-admin-panel,btplc-trend-box-panel,neocat-cal-heatmap-panel
+      - SET_CONTAINER_TIMEZONE=true
+      - CONTAINER_TIMEZONE=America/Los_Angeles
   influxdb:
     image: influxdb:1.3
     ports:
@@ -33,8 +33,8 @@ services:
     volumes:
       - ./data/influxdb:/var/lib/influxdb
     restart: always
-    mem_limit: 2000000000
-    cpuset: 2
+    mem_limit: 4000000000
+    cpuset: '2'
     environment:
       - SET_CONTAINER_TIMEZONE=true
       - CONTAINER_TIMEZONE=America/Los_Angeles
